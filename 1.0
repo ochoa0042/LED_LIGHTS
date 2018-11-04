@@ -1,0 +1,91 @@
+int ShieldLights      = 2;
+int LeftFrontLights   = 3;
+int RightFrontLights  = 4;
+int LeftEngineLights  = 5;               //NAMING ALL THE PINS FROM THEIR PHYSICAL PIN
+int RightEngineLights = 6;               //PWM PINS DEFINED IN THE SECTION BELOW
+int AirBoxLights      = 7;               //A VARIABLE TO GROUP PINS & INDIVIDUAL PIN USAGE
+int UndertailLights   = 8;
+int LeftRearTire      = 9;
+int RightRearTire     = 10;
+int PWM10             = 11;              //PWM #10 , #11 , #12 ARE OPEN FOR ANYHTING ELSE NEEDED
+int PWM11             = 12;
+int PWM12             = 13;
+
+int     TogglePin         = 22;          //PHYSICAL DIGITAL PIN FOR TOGGLE | INPUT DEFINED BELOW
+int     RightBlinkerPin   = 23;          //PHYSICAL DIGITAL PIN FOR RIGHT BLINKER | INPUT DEFINED BELOW
+int     LeftBlinkerPin    = 24;          //PHYSICAL DIGITAL PIN FOR LEFT BLINKER | INPUT DEFINED BELOW
+
+boolean LEDModeToggle     = LOW;         //TRANSFERING VARIABLE FROM DEBOUNCE TO COUNTER
+int     CurrentToggle     = LOW;         //DIGITALLY CODED VARIABLE FROM PHYSICAL TOGGLE
+int     LEDModeSetting    = LOW;         //WHILE LOOP SELECTION SETTING FROM TOGGLE
+int     LEDLevel          = LOW;         //GLOWING VARIABLE
+
+
+
+void setup() 
+{
+  pinMode(ShieldLights, OUTPUT);
+  pinMode(LeftFrontLights, OUTPUT);
+  pinMode(RightFrontLights, OUTPUT);
+  pinMode(LeftEngineLights, OUTPUT);
+  pinMode(RightEngineLights, OUTPUT);
+  pinMode(AirBoxLights, OUTPUT);
+  pinMode(UndertailLights, OUTPUT);
+  pinMode(LeftRearTire, OUTPUT);
+  pinMode(RightRearTire, OUTPUT);
+  pinMode(PWM10, OUTPUT);
+  pinMode(PWM11, OUTPUT);
+  pinMode(PWM12, OUTPUT);
+
+  pinMode(TogglePin, INPUT);              //DEFINED INPUT FOR TOGGLE PIN
+  pinMode(RightBlinkerPin, INPUT);        //DEFINED INPUT FOR RIGHT BLINKER
+  pinMode(LeftBlinkerPin, INPUT);         //DEFINED INPUT FOR LEFT BLINKER
+}
+
+boolean debounce(boolean last){CurrentToggle = digitalRead(TogglePin);
+  if (last != CurrentToggle){delay(050);CurrentToggle = digitalRead(TogglePin);}return CurrentToggle;}    //TURNING PHYSICAL PIN INTO DIGITAL VARIABLE
+
+void loop() 
+{
+  int FrontLights         = ShieldLights, LeftFrontLights, RightFrontLights;
+  int EngineBayLights     = LeftEngineLights, RightEngineLights, AirBoxLights;
+  int RearLights          = UndertailLights, LeftRearTire, RightRearTire;
+
+  int AllLights           = FrontLights + EngineBayLights + RearLights;
+  int RightLights         = RightFrontLights + RightEngineLights + RightRearTire;         //ADDED FOR LEFT AND RIGHT BLINKERS
+  int LeftLights          = LeftFrontLights + LeftEngineLights + LeftRearTire;
+  
+  CurrentToggle = debounce(LEDModeToggle);              //DIGITAL INCRIMENTING TOGGLE VARIABLE
+  if (LEDModeToggle == LOW && CurrentToggle == HIGH)
+  {LEDModeSetting = LEDModeSetting + 1; LEDModeToggle = CurrentToggle; digitalWrite(TogglePin, LEDModeSetting);}
+  
+
+  if (RightBlinkerPin == HIGH){digitalWrite(RightLights, HIGH);}else{digitalWrite(RightLights, LOW);}   //RIGHT BLINKER CODE
+
+  if (LeftBlinkerPin == HIGH){digitalWrite(LeftLights, HIGH);}else{digitalWrite(LeftLights, LOW);}      //LEFT BLINKER CODE
+
+  while (LEDModeSetting == 0){digitalWrite(AllLights, LOW);break;}     //SETTING ALL LIGHTS OFF
+ 
+  while (LEDModeSetting == 1){digitalWrite(AllLights, HIGH);break;}    //#1 TOGGLE MODE SOLID TURNS ALL LIGHTS ON
+  
+  while (LEDModeSetting == 2){digitalWrite(AllLights, HIGH);delay(500);digitalWrite(AllLights, LOW);delay(250);break;}      //#2 TOGGLE MODE FLASHING
+  
+  while (LEDModeSetting == 3){
+    for (LEDLevel = 0; LEDLevel < 255; LEDLevel ++){digitalWrite(AllLights, LEDLevel);delay(050);}      //#3 TOGGLE MODE GLOWING
+    for (LEDLevel = 255; LEDLevel > 0; LEDLevel --){digitalWrite(AllLights, LEDLevel);delay(050);}
+    break;}
+
+  while (LEDModeSetting == 4)                              //GLOWING #4 HEARTBEAT
+  { digitalWrite(RearLights, 100); digitalWrite(FrontLights, 100); digitalWrite(EngineBayLights, 100); delay(800);
+    digitalWrite(EngineBayLights, 255); delay(100);
+    digitalWrite(EngineBayLights, 100); delay(100);
+    digitalWrite(EngineBayLights, 255);
+    break;}
+
+  while (LEDModeSetting == 5)                           //DISCO #5 LIGHTS 
+  { digitalWrite (random (2,10), HIGH); delay (random (10, 250));
+    digitalWrite (random (2,10), LOW); delay (random (10, 250));
+    break;}
+
+  if (LEDModeSetting > 5 ){LEDModeSetting == 0;}
+}
